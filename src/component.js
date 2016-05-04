@@ -2,6 +2,7 @@ import { hook } from './hooks';
 import { extend, clone, isFunction } from './util';
 import { createLinkedState } from './linked-state';
 import { triggerComponentRender, renderComponent } from './vdom/component';
+import { createStore } from 'redux';
 
 /** Base Component class, for he ES6 Class method of creating Components
  *	@public
@@ -23,7 +24,14 @@ export default function Component(props, context) {
 	/** @type {object} */
 	this.props = props;
 	/** @type {object} */
-	this.state = hook(this, 'getInitialState') || {};
+	this.store = createStore(this.reducer);
+
+	Object.defineProperty(this, 'state', {
+		get() {
+			return this.store.getState();
+		},
+		set(value) {}
+	});
 }
 
 
@@ -80,6 +88,14 @@ extend(Component.prototype, {
 	},
 
 
+	/** Update component state by dispatching an action to the reducer.
+	 *	@param {object} action		An action to be dispatched to the store
+	 */
+	dispatch(action) {
+		this.store.dispatch(action);
+	},
+
+
 	/** Immediately perform a synchronous re-render of the component.
 	 *	@private
 	 */
@@ -97,6 +113,16 @@ extend(Component.prototype, {
 	 */
 	render() {
 		return null;
+	}
+
+
+	/** Accepts `state` and `action`, and returns a new `state`.
+	 *	@param {object} state		The component's current state
+	 *	@param {object} action		An action containing a type and a payload
+	 *	@returns {object} state
+	 */
+	reducer(state = {}, {type, payload}) {
+		return state;
 	}
 
 });
